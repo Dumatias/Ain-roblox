@@ -1,0 +1,93 @@
+--// shh!! (please continue the joke lmao)
+serverlocked = false
+bannedusers = {}
+
+function kickuser(user)
+	if user ~= game.Players.LocalPlayer then
+		table.insert(bannedusers, user.Name)
+		if user.Character then user.Character:Destroy() end
+		game.ReplicatedStorage.DefaultChatSystemChatEvents.MutePlayerRequest:InvokeServer(user.Name)
+		user:Destroy()
+	end
+end
+
+game:GetService("RunService").Stepped:Connect(function()--while task.wait(.4) do
+	task.wait(.1)
+	for _,plr in pairs(bannedusers) do
+		if workspace:FindFirstChild(plr) then
+			workspace[plr]:Destroy()
+		end
+	end
+	if serverlocked == true then
+		for _,v in pairs(game.Players:GetPlayers()) do
+			kickuser(v)
+		end
+	end
+end)
+
+game.Players.PlayerAdded:Connect(function(plr)
+	if table.find(bannedusers, plr.Name) then
+		kickuser(plr.Name)
+	end
+end)
+
+return {
+	["PluginName"] = "Server Administrator",
+	["PluginDescription"] = "Bypasses Filtering Enabled and Anti-cheat allowing you to fulfill your powerful dreams.",
+	["Commands"] = {
+		["kick"] = {
+			["ListName"] = "kick",
+			["Description"] = "Kicks player",
+			["Aliases"] = {},
+			["Function"] = function(args, speaker)
+				plr = game.Players[getPlayer(args[1], speaker)[1]]
+				kickuser(plr)
+				notify("Kicked "..plr.Name)
+			end},
+		["ban"] = {
+			["ListName"] = "ban",
+			["Description"] = "Bans player",
+			["Aliases"] = {},
+			["Function"] = function(args, speaker)
+				plr = game.Players[getPlayer(args[1], speaker)[1]]
+				kickuser(plr, true)
+				notify("Banned "..plr.Name)
+			end},
+		["explode"] = {
+			["ListName"] = "explode",
+			["Description"] = "Explodes player",
+			["Aliases"] = {},
+			["Function"] = function(args, speaker)
+				plr = game.Players[getPlayer(args[1], speaker)[1]]
+				Instance.new("Explosion", plr.Character).Position = plr.Character.PrimaryPart.Position
+				task.wait(.5)
+				plr.Character:Destroy()
+			end},
+		["serverlock"] = {
+			["ListName"] = "serverlock",
+			["Description"] = "Locks the server",
+			["Aliases"] = {"slock"},
+			["Function"] = function(args, speaker)
+				serverlocked = true
+				notify("Server has been locked.")
+			end},
+		["unserverlock"] = {
+			["ListName"] = "unserverlock",
+			["Description"] = "Unlocks the server",
+			["Aliases"] = {"unslock"},
+			["Function"] = function(args, speaker)
+				serverlocked = false
+				notify("Server has been unlocked.")
+			end},
+		["shutdown"] = {
+			["ListName"] = "shutdown",
+			["Description"] = "Shutdowns the server",
+			["Aliases"] = {},
+			["Function"] = function(args, speaker)
+				notify("Shutting the server down...")
+				task.wait(math.random(2,6))
+				game.Players.LocalPlayer:Kick("Server has shutdown.")
+			end
+		},
+	},
+}
